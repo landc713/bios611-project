@@ -1,21 +1,10 @@
 # 📊 BIOS 611 - Project Set Up
 
-*A README.md for the set-up of how to run the project.*
+*Hi, this is my 611 Data Science Project. More to come*
 
-## 🚀 Overview
+## 📦 Repo Git Clone
 
-Explain of the project
+<https://github.com/landc713/bios611-project.git>
 
-## 🧰 Technologies Used
 
--   Docker
--   RStudio / dplyr
--   ARM64-compatible base images
 
-## 📦 Setup Instructions
-
-Clone the repo git clone here: <https://github.com/yourusername/my-project.git>
-
-# Build the container
-
-docker build -t my-project .
