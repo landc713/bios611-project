@@ -43,22 +43,35 @@ results/plots/05_asia.png results/plots/05_europe.png results/plots/05_americas.
 	Rscript 05_eda_regions.R
 	@echo "Finished running 05_eda_regions.R: Produced plots in results/plots"
 
-#PCA
-results/plots/07_scree.png results/plots/08_pca.png results/tables/pc1_loading.RData results/tables/pc2_loading.RData: data/cuisines.csv data/ingredients.csv data/regions.csv 05_eda_regions.R 00_init.R| create_dirs
+#PCA and tSNE
+results/plots/07_scree.png results/plots/08_t_sne.png data/tsne.rds: data/cuisines.csv data/ingredients.csv data/regions.csv 05_eda_regions.R 00_init.R| create_dirs
 	@echo "Running 06_pca.R"
 	Rscript 06_pca.R
 	@echo "Finished running 06_pca.R: Produced plots in results/plots"
+	
+#plotly
+results/plots/tsne_recipes.html: data/tsne.rds 06_tsne_plotly.R 00_init.R | create_dirs
+	@echo "Running 06_tsne_plotly.R to produce the interactive plot of the cuisines dataset"
+	Rscript 06_tsne_plotly.R
+	@echo "Finished running 06_tsne_plotly.R: Produced tsne_recipes.html"
+
 
 #Creating the report
-results/report.html: 07_REPORT.Rmd
+results/report.html: data/cuisines.csv data/ingredients.csv data/regions.csv\
+ results/plots/01_eda_recipes_by_year.png results/plots/02_eda_nutrients.png results/plots/03_eda_cuisines.png results/plots/04_eda_top25.png\
+ results/tables/contents.RData results/tables/table1.RData\
+ results/plots/05_asia.png results/plots/05_europe.png results/plots/05_americas.png results/plots/06_heatmap.png\
+ results/plots/07_scree.png results/plots/08_t_sne.png data/tsne.rds\
+ results/plots/tsne_recipes.html 00_init.R 07_REPORT.Rmd | create_dirs
 	Rscript -e "rmarkdown::render('07_REPORT.Rmd', output_file='results/report.html')"
 
 # Default target, runs everything (also ensures directories are created)
 all: create_dirs data/cuisines.csv data/ingredients.csv data/regions.csv\
  results/plots/01_eda_recipes_by_year.png results/plots/02_eda_nutrients.png results/plots/03_eda_cuisines.png results/plots/04_eda_top25.png\
  results/tables/contents.RData results/tables/table1.RData\
- results/plots/05_asia.png results/plots/05_europe.png results/plots/05_americas.png results/plots/06_heatmap.png results/plots/07_scree.png results/plots/08_pca.png\
- results/tables/pc1_loading.RData results/tables/pc2_loading.RData\
+ results/plots/05_asia.png results/plots/05_europe.png results/plots/05_americas.png results/plots/06_heatmap.png\
+ results/plots/07_scree.png results/plots/08_t_sne.png data/tsne.rds\
+ results/plots/tsne_recipes.html\
  results/report.html
 	@echo "All tasks completed!"
 

@@ -18,10 +18,9 @@ ing <- read.csv("data/ingredients.csv", header = TRUE) %>% select(-X.1)
 crosswalk<- merge(cuisines,regions,by="country") %>% select(X,region,continent,country)
 df <- merge(ing,crosswalk, by = "X") %>% select(-country.y) %>% rename(country = country.x)
 ########################################################################################
-#Top 10 Ingredients By Cuisine
+#Top 5 Ingredients By Cuisine
 ########################################################################################
-uninformative <- c("sugar","onion","butter","flour","sauce","water","oil","egg","salt",
-                   "garlic","milk","pepper","baking powder","baking powder","cornstarch","baking soda")
+uninformative <- c("sugar","salt","sauce","egg","water","onion","garlic","oil","flour","sauce","vegetable oil","milk","butter")
 df <- df %>% filter(!str_detect(food, str_c(uninformative, collapse = "|")))
 df$country <- factor(df$country,
                                levels = c(
@@ -74,9 +73,7 @@ df$country <- factor(df$country,
                                  "Swiss",
                                  "South African",
                                  "Jewish"
-                               )
-                               
-)
+                               ))
 top5_ingredients <- df %>%
   group_by(country,food) %>%
   summarise(count = n(), .groups = "drop") %>%
@@ -150,7 +147,8 @@ ggsave(filename="results/plots/05_americas.png",plot=america_p ,width=8, height=
 ########################################################################################
 # Heatmap of Top 100 Ingredients 
 ########################################################################################
-total_recipes <- df %>% distinct(X) %>% nrow()
+df <- merge(ing,crosswalk, by = "X") %>% select(-country.y) %>% rename(country = country.x) %>% filter(!is.na(food))
+total_recipes <- df %>% distinct(X) %>% nrow() 
 
 # 2. Overall proportion per ingredient
 overall_prop <- df %>%

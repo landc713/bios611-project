@@ -3,16 +3,25 @@ title: "BIOS 611 Final Project: Allrecipes.com"
 author: "Lauren D’Costa"
 date: "`r Sys.Date()`"
 output:
-  html_document
+   html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
 ---
+```{r init, warning=FALSE, error=FALSE, echo=FALSE,message=FALSE}
+source("00_init.R")
+```
 
 # Introduction
+```{r png, fig.align="center",echo=FALSE}
+    knitr::include_graphics("allrecipes.png")
+```
 
 ## Allrecipes.com
 
 If you've ever searched online for a recipe or asked "what should I make for dinner" in a search engine, one of the results is most likely from allrecipes.com.
 
-Allrecipes.com is recipe-sharing platform with over 100,000 recipes and 60 million users globally. Users can submit their own recipes as well as interact with other users by commenting, reviewing, or rating recipes. Allrecipes is unique as it is a public forum for recipes and a community for anyone who wants to cook, rather than a carefully curated blog. You can find family heirlooms like [Jewish Grandma's Best Beef Brisket](https://www.allrecipes.com/recipe/103067/jewish-grandmas-best-beef-brisket/) or simple recipes like these [basic crepes](https://www.allrecipes.com/recipe/16383/basic-crepes/) (which I have tried and can attest to!)
+Allrecipes.com is recipe-sharing platform with over 100,000 recipes and 60 million users globally. Users can submit their own recipes as well as interact with other users by commenting, reviewing, or rating recipes. Allrecipes is unique as it is a public forum for recipes and a community for anyone who wants to cook, rather than a carefully curated blog. You can find family heirlooms like [Jewish Grandma's Best Beef Brisket](https://www.allrecipes.com/recipe/103067/jewish-grandmas-best-beef-brisket/) or simple recipes like these [basic crepes](https://www.allrecipes.com/recipe/16383/basic-crepes/).
 
 In addition to being a great resource when you're in a cooking rut, it has a trove of data on each page. So much so, that [Brian Mubia](https://cran.r-project.org/web/packages/tastyR/index.html) took notice and decided to create the tastyR package.
 
@@ -27,14 +36,15 @@ After reviewing the cuisines dataset, I was most interested in two components: t
 To help guide the project, I came up with some questions to try and answer.
 
 -   What are the most common ingredients overall and by cuisine?
--   Can we identify cuisines that have similar ingredient profiles?
+-   Can we visualize recipes with similar ingredient profiles by using t-SNE?
 -   Are cuisines with similar ingredient profiles geographically close?
 
 To answer these questions, we will:
 
 1.  Produce histograms to display common ingredients.
-2.  Use PCA to reduce ingredients to a few components, then analyze distances in the PCA space.
-3.  Use the UN Geoscheme to define geographic regions and visually review if countries that are close together in the PCA space are also within the same geographic regions.
+2.  Use PCA for dimensionality reduction.
+3.  Use t-SNE to visualize recipes with similar ingredient profiles.
+3.  Use the UN Geoscheme to define geographic regions and visually group recipes.
 
 # Preparation
 
@@ -81,9 +91,9 @@ df <- read.csv("data/cuisines.csv", header = TRUE) %>%
 print(df)
 ```
 
-As you can see, it is contains a lot of information, represented in different ways. For example, there is additional text within parentheses as well as unnecessary information for our purposes like measurements and method of preparation (ex. "chopped").
+As you can see, it is contains a lot of information, represented in different forms. For example, there is additional text within parentheses as well as measurements and method of preparation (ex. "chopped").
 
-For the purposes of PCA, we will standardized and tokenized the ingredients so we get one row per ingredient per recipe, with no measurement, unit, or additional information.
+For the purposes of PCA, we will standardized and tokenized the ingredients so we get one row per ingredient per recipe, with no measurement, unit, or additional information. Adjectives that are unnecessary such as small,large etc. will be removed.
 
 The following steps were taken:
 
@@ -93,9 +103,9 @@ The following steps were taken:
 -   Removed prepositions (e.g., “with”, “or”, “for”, “from”, “in”) and adjectives
 -   This was done using NLP annotation with UDPipe to add part‑of‑speech tags
 -   Standardized plural forms of the food to the singular version
--   Identified and rectified misspellings by using the functions `stringdistmatrix`,`hclust`, and `cutree` like above.The threshold for `cutree` was 0.10 and duplicates were manually reviewed to ensure that they were true misspellings.
+-   Identified and rectified misspellings by using the functions `stringdistmatrix`,`hclust`, and `cutree` like above.The threshold for `cutree` was 0.10 and clusters were manually reviewed to ensure that they were true misspellings.
 
-Standardizing the ingredients was not a trivial effort. Given the amount of recipes and ingredients, it is not guaranteed that every case was account for in this step.
+Standardizing the ingredients was not a trivial effort. Given the amount of recipes and ingredients, it is not guaranteed that every case was accounted for in this step. 
 
 After these steps, this is what the ingredients column became:
 
@@ -110,8 +120,9 @@ In the data analysis section, we will discuss the top ingredients.
 
 # Data Analysis
 
-## Descriptive Analysis
+## Descriptive Analyses
 
+### Features
 To get a sense of the data we are working with, I produced some basic graphs and a table with descriptive statistics on most of the variables.
 
 ```{r by_year, fig.align="center",echo=FALSE}
@@ -126,11 +137,11 @@ We can see above that we are dealing with recipes mostly from the last 5 years, 
 
 The above graphs display the spread of nutritional variables. With 50% of recipes having less than 11 grams of protein, we may have more recipes that are vegetarian rather than meat-based. The median value of calories is about 320 and so the recipes are most likely moderate and not indulgent.
 
-Below includes a more numeric look at the raw variables.
+The table below includes a more numerical look at the raw variables.
 
 ```{r table1, message=FALSE, warning=FALSE, echo=FALSE}
 load("results/tables/table1.RData")
-table2 <- table1 %>% filter(variable != "region" & variable != "continent" & variable != "country" & variable != "Cuisine")
+table2 <- table1 %>% filter(variable != "region" & variable != "continent" & variable != "country" & variable != "Cuisine" & !is.na(statistics))
 kable(table2, align = c("l","l","l"),caption = "Table 2. Descriptive Statistics for Variables")
 ```
 
@@ -146,11 +157,18 @@ There are over 40 different cuisines, most of which are directly related to a si
     knitr::include_graphics("results/plots/04_eda_top25.png")
 ```
 
-The top 25 ingrediients are not very surprising and make ntuiitive sense. I am a little surprised that onion is first compared to salt and water. For the rest of the graphs and the PCA analysis, I will remove the top 10 ingredients as I don't think they are very informative in defining a country's ingredient profile.
+The top 25 ingredients are not very surprising and make intuitive sense. I am a little surprised that onion is first compared to salt and water. 
 
-## Top 5 Ingredients by Cuisine
+### Heatmap of Top 50 Ingredients
 
-To answer what are the most common ingredients by cuisine, the following histograms graphs were created. This allows us to step through all the cuisines and take notice of which ingredients appeared the most. I organized them by the UN Geoscheme for regions and when a cuisine was not a country, I grouped it with where the cuisine is typically associated with. The only cuisine I did not do this was Jewish cuisine since they cover multiple areas and are dispersed globally.We will use the grouping in PCA.
+To answer what are the most common ingredients by cuisine, the following histograms graphs were created. This allows us to step through all the cuisines and take notice of which ingredients appeared the most. I organized them by the UN Geoscheme for regions and when a cuisine was not a country, I grouped it with where the cuisine is typically associated with. The only cuisine I did not do this was Jewish cuisine since they cover multiple areas and are dispersed globally. We will use these groupings for visualization later.
+
+To get a look at the top 50 ingredients and all the cuisines at once, I created this heatmap. This allows us to identify which cuisines have similar proportion for each of the top 50 ingredients. The y-axis is grouped by region and the x-axis is ordered from most common to least common.
+
+```{r heat, fig.align="center",echo=FALSE}
+    knitr::include_graphics("results/plots/06_heatmap.png")
+```
+### Top 5 Ingredients by Cuisine
 
 ```{r top5, fig.align="center",echo=FALSE}
     knitr::include_graphics("results/plots/05_americas.png")
@@ -158,37 +176,39 @@ To answer what are the most common ingredients by cuisine, the following histogr
     knitr::include_graphics("results/plots/05_europe.png")
 ```
 
-To get a look at the top 50 ingredients and all the cuisines at once, I created this heatmap. This allows us to identify which cuisines have similar frequency of ingredients. The y-axis is grouped by region and the x-axis is ordered from most common to least common.
 
-```{r heat, fig.align="center",echo=FALSE}
-    knitr::include_graphics("results/plots/06_heatmap.png")
-```
 
-## PCA
+## Data Science Analysis
 
--   **Steps**
-    -   Filtered out uninformative ingredients (e.g., sugar, onion, butter, salt, etc.).
-    -   Selected the top 500 most frequent ingredients for analysis.
-    -   Built a country × ingredient frequency table.
-    -   Normalized counts by row totals to create proportional ingredient profiles per country.
-    -   Applied `prcomp()` to the ingredient proportion matrix with centering and scaling.
-    -   Generated a scree plot to visualize variance explained by each component.
-    -   Created scatterplots of PC1 vs PC2, colored by region.
+### Data Set Up
+- Created a binary matrix where each row represents a recipe and each column represents an ingredient
+- Marked presence of an ingredient with `1` and absence with `0`
+- Ensured each recipe–ingredient pair is unique
+- Converted the table into a matrix and standardized values for analysis
 
+### Principal Component Analysis (PCA)
+- Ran PCA to reduce the high-dimensional ingredient matrix into 50 components
+- Calculated variance explained by each component
+- Produced a scree plot to visualize variance explained by principal components
+- Extracted PCA scores
 ```{r pca_s, fig.align="center",echo=FALSE}
         knitr::include_graphics("results/plots/07_scree.png")
 ```
 
-```{r pca_g, fig.align="center",echo=FALSE}
-        knitr::include_graphics("results/plots/08_pca.png")
+### t-SNE Embedding
+- Applied t-SNE on the PCA results to map recipes into two dimensions
+- Generated coordinates (`X`, `Y`) for each recipe in the t-SNE plot
+- Merged these coordinates with the crosswalk table to attach recipe names, regions, and URLs
+
+### Plotting
+- Built a Plotly scatter plot, coloring points by region and listing countries under each region in the legend.  
+- Each recipe point includes hover text and a link, so you can explore cuisines interactively.  
+- A click handler was added to open recipe URLs in a browser  
+
+```{r, results='asis', message=FALSE, echo=FALSE}
+cat('<iframe src="results/plots/tsne_recipes.html" width="100%" height="600" frameborder="0"></iframe>')
 ```
 
-```{r pcs, message=FALSE, warning=FALSE, echo=FALSE}
-load("results/tables/pc1_loading.RData")
-load("results/tables/pc2_loading.RData")
-print(head(pc1_loading, 10))
-print(head(pc2_loading, 10))
-```
 
       
 # Discussion
@@ -201,5 +221,5 @@ print(head(pc2_loading, 10))
 
 # Next Steps
 -   Better way to standardize ingredients
--   K Means to idenify clusters
+-   K Means to identify clusters
 -   Webscrape more recipes to get a better variety and representation of data

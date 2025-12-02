@@ -81,12 +81,11 @@ save(table1, file = "results/tables/table1.RData")
 recipes_by_year <- df %>%
                    mutate(year = year(date_published)) %>%
                    count(year)
-n_obs <- nrow(df)
 
 plot_year <- ggplot(recipes_by_year, aes(x = year, y = n)) +
                  geom_col(fill = "#FFA500", width = 0.8) +
                  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) +
-                 labs(title = paste("Total Counts of Recipes by Year (N =",nrow(recipes_by_year),")"),
+                 labs(title = paste("Total Counts of Recipes by Year (N =",nrow(df),")"),
                        x = "Year Published or Last Updated",
                        y = "Number of Recipes") +
                 theme_allrecipes(base_size=8) +
@@ -166,7 +165,7 @@ ggsave(filename="results/plots/03_eda_cuisines.png",plot=cuisine_histo,width=8, 
 # Top Ingredients
 ########################################################################################
 # Select top 10 ingredients by count
-ingredient_counts <- df_ing %>%
+ingredient_counts <- df_ing %>%  filter(!is.na(food))%>%
   distinct(X, food) %>%   # ensure each recipe counts once per ingredient
   count(food, name = "recipe_count") %>%
   mutate(prop = recipe_count / n_distinct(df$X)) %>%  # proportion of recipes

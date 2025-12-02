@@ -15,6 +15,10 @@ library(patchwork)
 library(cowplot)
 library(knitr)
 library(ggrepel)
+library(irlba) 
+library(Rtsne)
+library(plotly)
+library(htmlwidgets)
 ########################################################################################
 #theme for graphs
 ########################################################################################
@@ -56,6 +60,59 @@ region_colors <- c(
 
 # Create a factor with levels in the order of region_colors
 region_factor <- factor(names(region_colors), levels = names(region_colors))
+
+# Define a mapping of cuisines/countries to Plotly marker symbols
+country_shapes <- c(
+  "Tex-Mex" = "circle",
+  "Cuban" = "square",
+  "Puerto Rican" = "diamond",
+  "Jamaican" = "triangle-up",
+  "Amish and Mennonite" = "triangle-down",
+  "Southern Recipes" = "cross",
+  "Soul Food" = "x",
+  "Canadian" = "star",
+  "Cajun and Creole" = "hexagon",
+  "Chilean" = "circle-open",
+  "Peruvian" = "square-open",
+  "Brazilian" = "diamond-open",
+  "Argentinian" = "triangle-up-open",
+  "Colombian" = "triangle-down-open",
+  "Chinese" = "cross-open",
+  "Korean" = "x-open",
+  "Japanese" = "star-open",
+  "Australian and New Zealander" = "hexagon-open",
+  "Filipino" = "circle-dot",
+  "Malaysian" = "square-dot",
+  "Vietnamese" = "diamond-dot",
+  "Thai" = "triangle-up-dot",
+  "Indonesian" = "triangle-down-dot",
+  "Bangladeshi" = "cross-dot",
+  "Indian" = "x-dot",
+  "Pakistani" = "star-dot",
+  "Israeli" = "hexagon-dot",
+  "Lebanese" = "circle-cross",
+  "Turkish" = "square-cross",
+  "Persian" = "diamond-cross",
+  "Russian" = "triangle-up-cross",
+  "Polish" = "triangle-down-cross",
+  "Scandinavian" = "circle-x",
+  "Norwegian" = "square-x",
+  "Swedish" = "diamond-x",
+  "Finnish" = "triangle-up-x",
+  "Danish" = "triangle-down-x",
+  "Greek" = "circle-open-dot",
+  "Italian" = "square-open-dot",
+  "Spanish" = "diamond-open-dot",
+  "Portuguese" = "triangle-up-open-dot",
+  "French" = "triangle-down-open-dot",
+  "German" = "cross-open-dot",
+  "Dutch" = "x-open-dot",
+  "Belgian" = "star-open-dot",
+  "Austrian" = "hexagon-open-dot",
+  "Swiss" = "circle-open-cross",
+  "South African" = "square-open-cross",
+  "Jewish" = "diamond-open-cross"
+)
 
 
                             
