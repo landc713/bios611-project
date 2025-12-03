@@ -20,7 +20,7 @@ df <- merge(ing,crosswalk, by = "X") %>% select(-country.y) %>% rename(country =
 ########################################################################################
 #Top 5 Ingredients By Cuisine
 ########################################################################################
-uninformative <- c("sugar","salt","sauce","egg","water","onion","garlic","oil","flour","sauce","vegetable oil","milk","butter")
+uninformative <- c("sugar","salt","sauce","egg","water","onion","garlic","oil","flour","sauce","vegetable oil","milk","butter","pepper","powder","baking powder")
 df <- df %>% filter(!str_detect(food, str_c(uninformative, collapse = "|")))
 df$country <- factor(df$country,
                                levels = c(

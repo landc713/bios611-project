@@ -44,7 +44,7 @@ To answer these questions, we will:
 1.  Produce histograms to display common ingredients.
 2.  Use PCA for dimensionality reduction.
 3.  Use t-SNE to visualize recipes with similar ingredient profiles.
-4..  Use the UN Geoscheme to define geographic regions and visually group recipes.
+4.  Use the UN Geoscheme to define geographic regions and visually group recipes.
 
 # Preparation
 
@@ -100,8 +100,7 @@ The following steps were taken:
 -   Standardized text by trimming whitespace, removing percentages, parentheses, and non‑ASCII characters
 -   Split multi‑ingredient strings into separate rows
 -   Identified and removed raw units and numeric measurements using regex patterns
--   Removed prepositions (e.g., “with”, “or”, “for”, “from”, “in”) and adjectives
--   This was done using NLP annotation with UDPipe to add part‑of‑speech tags
+-   Removed prepositions (e.g., “with”, “or”, “for”, “from”, “in”) and adjectives (done using NLP annotation with UDPipe to add part‑of‑speech tags)
 -   Standardized plural forms of the food to the singular version
 -   Identified and rectified misspellings by using the functions `stringdistmatrix`,`hclust`, and `cutree` like above.The threshold for `cutree` was 0.10 and clusters were manually reviewed to ensure that they were true misspellings.
 
@@ -173,7 +172,7 @@ The top 25 ingredients are not very surprising and make sense intuitively. I am 
 ```
 
 ### Top 5 Ingredients by Cuisine
-For fun, I also created histograms of the top 5 ingredients in each country after removing the top 10 ingredients like salt and sugar. The top 5 ingredients made intuitive sense to me but I could also see that in the recipes included in this dataset are not representative of an entire cuisine, but rather more popular recipes.
+For fun, I also created histograms of the top 5 ingredients in each country after removing the top 10 ingredients like salt and sugar. The top 5 ingredients made intuitive sense to me but I could also see that in the recipes included in this dataset are not representative of an entire cuisine, but rather more popular recipes. One thing that did surprise me was mozzellera cheese being the number 1 ingredient in Columbian recipes.
 
 
 ```{r top5, fig.align="center",echo=FALSE}
@@ -184,6 +183,7 @@ For fun, I also created histograms of the top 5 ingredients in each country afte
 
 ## Data Science Analysis
 Below outlines the steps to take the recipes' ingredients and see if we can see any structure or clusters through t-SNE.
+
 ### Data Set Up
 - Created a binary matrix where each row represents a recipe and each column represents an ingredient
 - Marked presence of an ingredient with `1` and absence with `0`
@@ -191,8 +191,8 @@ Below outlines the steps to take the recipes' ingredients and see if we can see 
 - Converted the table into a matrix and scaled the matrix for analysis
 
 ### Principal Component Analysis (PCA)
-- Ran PCA using the function prcomp_irlba, since we had over 1,000 ingredients and sparse matrices, to reduce the high-dimensional ingredient matrix into 100 components (20% variance)
-- Note: at first, I ran the normal prcomp function and it took about 670 PCs to capture 80% variance (but prcomp_irlba would not finish running with that many PCs, given it is computationally expensive).
+- Ran PCA using the function `prcomp_irlba`, since we had over 1,000 ingredients and sparse matrices, to reduce the high-dimensional ingredient matrix into 100 components (~20% variance)
+- Note: at first, I ran `prcomp` and it took about 670 PCs to capture 80% variance (but `prcomp_irlba` would not finish running with that many PCs, given how computationally expensive it was).
 - Calculated variance explained by each component
 - Produced a scree plot to visualize variance explained by principal components
 ```{r pca_s, fig.align="center",echo=FALSE}
@@ -201,7 +201,7 @@ Below outlines the steps to take the recipes' ingredients and see if we can see 
 
 
 ### t-SNE Embedding
-- Applied t-SNE on the PCA results to map recipes into two dimensions
+- Applied t-SNE on the PCA results to project recipes into two dimensions
 - Generated coordinates (`X`, `Y`) for each recipe in the t-SNE plot
 - Merged these coordinates with the crosswalk table to attach recipe names, regions, and URLs
 
@@ -214,19 +214,17 @@ Below outlines the steps to take the recipes' ingredients and see if we can see 
 cat('<iframe src="results/plots/tsne_recipes.html" width="100%" height="600" frameborder="0"></iframe>')
 ```
 # Discussion
-To see if we can visualize recipes with similar ingredient profiles, we used PCA to reduce dimensionality and applied t-SNE to visualize local neighborhoods. You can see that Asian recipes, particularly, Southern, Eastern, and South-east Asian, are located near each other. You can also see a couple of small North American and South American clusters. European recipes are spread out. One thing I did notice is that sweeter recipes were located by one another, additionally so were cocktail/drink recipes. I think the t-SNE might be showing us flavors or types of meals like desserts. If that is the case, it would explain why we see those Asian recipes together because there was more homogeneity in the type of recipes when I went through the names. Most of them were savory dinner recipes. The other cuisines, particular those in Europe, seem to have more of a balance with both savory and sweet dishes with less regionally-specific ingredients. 
+To see if we can visualize recipes with similar ingredient profiles, we used PCA to reduce dimensionality and applied t-SNE to visualize local neighborhoods. You can see that Asian recipes, particularly, Southern, Eastern, and South-east Asian, are located near each other. You can also see a couple of small North American and South American clusters. European recipes are spread out. One thing I did notice is that sweeter recipes were located by one another, additionally so were cocktail/drink recipes. I think we are seeing clusters by types of meals like desserts, bakery items, etc, rather than geographic region. If that is the case, it might explain why we see Asian recipes together because there was more homogeneity in the type of recipes when I went read through the names. Most of them were savory dinner recipes. The other cuisines, particular those in Europe, seem to have more heterogeneity with both savory and sweet dishes. 
 
-
-# Limitations
-There are some limitations that I want to acknowledge. The cuisines dataset is a relatively small sample that does not capture global cuisine. Additionally, since allrecipes.com is a U.S. owned company, we are going to have more recipes that for North American and English‑speaking audiences. For example, recipes labeled "Chinese" for their cuisine may be American-ized versions and don't accurately represent traditional cuisine. Lastly, food often crosses borders and having one cuisine tagged to it ignores the impact of colonization, immigration, fusion and globalization.
+One thing I learned through this process is that food often crosses borders and its important to recognize the impact of colonization, immigration,and globalization. I believe we see a little bit of this in the t-SNE plot as countries overlapped, but I think having a larger sample size, a wider variety of recipes within cuisines, and stronger ingredient standardization to account for words that are different but mean the same (scallions and green onions, for example) would make conclusions stronger.I would also want to ensure that recipes are not American-ized versions and accurately represent traditional cuisine. 
 
 
 # Next Steps
-If I were to continue this project, I'd like to do the following:
+For next steps, I'd like to do the following:
 
--   Web scrape more recipes to get a better variety and representation of data and add meal as a variable
+-   Web scrape more recipes to get a better variety and representation of data and add meal as a categorical variable
 -   Find a better way to standardize and tokenize ingredients
 -   Tag ingredients by dominant flavor (salty,sweet,bitter,umami, and sour)
 -   Repeat PCA and tSNE to see if there is clustering by meal,flavor,region
--   Use a clustering method to identify clusters
+-   Use a clustering method to identify clusters and describe them
 -   Create a Shiny app to find recipes by meal,flavor, and ingredients
