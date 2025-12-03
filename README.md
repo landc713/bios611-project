@@ -26,7 +26,7 @@ Feel free to change the password and name of the image. And if you have an ARM64
 
 2.  Open RStudio in your browser at <http://localhost:8787> The username is rstudio and the password is whatever you set earlier.
 
-3.  Click on the work folder, click on the settings icon, and then click "Set as Working Directory". You can also type
+3.  Click on the work folder, click on the settings icon, and then click "Set as Working Directory". You should also type
 
 ``` bash
 cd work
@@ -38,36 +38,4 @@ into the terminal as well.
 
 Please note that this dockerfile runs rocker/rstudio:4.4.1 and not rocker/verse due to incompatibilities with my ARM64 laptop.
 
-If you'd like to edit any of the code in your local copy, the Makefile is a good resource to understand how the analysis flows in addition to the outline of the folder structure below.
-
-## General Folder Structure
-
--   00_init.R
-
--   01_clean.R
-
--   02_ingredients.R
-
--   03_derive_region.R
-
--   04_eda.R
-
--   05_eda_regions.R
-
--   06_pca.R
-
--   07_REPORT.rmd
-
--   Dockerfile
-
--   Makefile
-
--   README.md
-
--   data
-
--   results
-
-    -   plots
-    -   tables
-    -   **report.html**
+If you'd like to edit any of the code in your local copy, the Makefile is a good resource to understand how the analysis flows.

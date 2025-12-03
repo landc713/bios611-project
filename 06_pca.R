@@ -51,14 +51,19 @@ mat_scaled <- scale(mat)
 ################################################################################
 # PCA
 ################################################################################
-# Efficient PCA for large sparse matrices
-results <- prcomp_irlba(mat_scaled, n = 50)
-
+results <- prcomp(mat_scaled)
 # Variance explained
 var        <- results$sdev^2
 var_prop   <- var / sum(var)
 cumulative <- cumsum(var_prop)
-print(cumulative)
+#print(cumulative)
+# Efficient PCA for large sparse matrices
+results <- prcomp_irlba(mat_scaled,n=100)
+
+var        <- results$sdev^2
+var_prop   <- var / sum(var)
+cumulative <- cumsum(var_prop)
+#print(cumulative)
 
 # Scree plot data
 scree_data <- data.frame(

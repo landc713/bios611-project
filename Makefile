@@ -57,8 +57,7 @@ results/plots/tsne_recipes.html: data/tsne.rds 06_tsne_plotly.R 00_init.R | crea
 
 
 #Creating the report
-results/report.html: data/cuisines.csv data/ingredients.csv data/regions.csv\
- results/plots/01_eda_recipes_by_year.png results/plots/02_eda_nutrients.png results/plots/03_eda_cuisines.png results/plots/04_eda_top25.png\
+results/report.html: results/plots/01_eda_recipes_by_year.png results/plots/02_eda_nutrients.png results/plots/03_eda_cuisines.png results/plots/04_eda_top25.png\
  results/tables/contents.RData results/tables/table1.RData\
  results/plots/05_asia.png results/plots/05_europe.png results/plots/05_americas.png results/plots/06_heatmap.png\
  results/plots/07_scree.png results/plots/08_t_sne.png data/tsne.rds\
@@ -73,6 +72,6 @@ all: create_dirs data/cuisines.csv data/ingredients.csv data/regions.csv\
  results/plots/07_scree.png results/plots/08_t_sne.png data/tsne.rds\
  results/plots/tsne_recipes.html\
  results/report.html
-	@echo "All tasks completed!"
+	@echo "All tasks completed - yahoo!"
 
 		

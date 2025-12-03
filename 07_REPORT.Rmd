@@ -44,11 +44,11 @@ To answer these questions, we will:
 1.  Produce histograms to display common ingredients.
 2.  Use PCA for dimensionality reduction.
 3.  Use t-SNE to visualize recipes with similar ingredient profiles.
-3.  Use the UN Geoscheme to define geographic regions and visually group recipes.
+4..  Use the UN Geoscheme to define geographic regions and visually group recipes.
 
 # Preparation
 
-Before diving into the data analysis, I want to go over the contents of the dataset, data cleaning steps and how ingredients were tokenized.
+Before diving into the data analysis, I want to go over the contents of the dataset,data cleaning steps and lastly,how ingredients were tokenized.
 
 ## Dataset Contents
 
@@ -93,7 +93,7 @@ print(df)
 
 As you can see, it is contains a lot of information, represented in different forms. For example, there is additional text within parentheses as well as measurements and method of preparation (ex. "chopped").
 
-For the purposes of PCA, we will standardized and tokenized the ingredients so we get one row per ingredient per recipe, with no measurement, unit, or additional information. Adjectives that are unnecessary such as small,large etc. will be removed.
+For the purposes of PCA and t-SNE, we will standardized and tokenized the ingredients so we get one row per ingredient per recipe, with no measurement, unit, or additional information. Adjectives that are unnecessary such as small,large etc. will be removed.
 
 The following steps were taken:
 
@@ -135,9 +135,9 @@ We can see above that we are dealing with recipes mostly from the last 5 years, 
     knitr::include_graphics("results/plots/02_eda_nutrients.png")
 ```
 
-The above graphs display the spread of nutritional variables. With 50% of recipes having less than 11 grams of protein, we may have more recipes that are vegetarian rather than meat-based. The median value of calories is about 320 and so the recipes are most likely moderate and not indulgent.
+The above graphs display the spread of nutritional variables. With 50% of recipes having less than 11 grams of protein, we may have more recipes that are vegetarian rather than meat-based. The median value of calories is about 320 and so the recipes are most likely moderate and not overly indulgent.
 
-The table below includes a more numerical look at the raw variables.
+The table below includes a more numerical look at the raw variables if intrigued. 
 
 ```{r table1, message=FALSE, warning=FALSE, echo=FALSE}
 load("results/tables/table1.RData")
@@ -147,28 +147,34 @@ kable(table2, align = c("l","l","l"),caption = "Table 2. Descriptive Statistics 
 
 Next, we will look at the two critical variables for this analysis - cuisine and ingredients. Below are graphs detailing the proportion of cuisines by recipe and the most common ingredients.
 
+There are over 40 different cuisines, most of which are directly related to a single country with the exception of a few such as Jewish, Cajun and Creole, Amish and Mennonite, and Southern Recipes. The largest percentage of recipes comes from Brazil and Filipino while the lowest is Belgian. There are several missing cuisines on this dataset and it is a limitation in this analysis. For example, we do not have any data on countries in Africa besides South Africa.
 ```{r cuis, fig.align="center",echo=FALSE}
     knitr::include_graphics("results/plots/03_eda_cuisines.png")
 ```
 
-There are over 40 different cuisines, most of which are directly related to a single country with the exception of a few such as Jewish, Cajun and Creole, Amish and Mennonite, and Southern Recipes. The largest percentage of recipes comes from Brazil and Filipino while the lowest is Belgian. There are several missing cuisines on this dataset and it is a limitation in this analysis. For example, we do not have any data on countries in Africa besides South Africa.
-
+Returning to the top ingredients, after standardizing and tokenizing, there were over a thousand uniquely named ingredients. I calculated the frequency of the ingredient appearing in the 2,209 recipes and graphed the proportion of recipes with the top 25 ingredients. 
 ```{r top25, fig.align="center",echo=FALSE}
     knitr::include_graphics("results/plots/04_eda_top25.png")
 ```
 
-The top 25 ingredients are not very surprising and make intuitive sense. I am a little surprised that onion is first compared to salt and water. 
+The top 25 ingredients are not very surprising and make sense intuitively. I am a little surprised that onion is first compared to salt, sugar, and water, though. Cinnamon and vanilla extract were also in the top 25 so that suggests to me that there are several bakery recipes like cookies or cinnamon rolls.
 
 ### Heatmap of Top 50 Ingredients
-
-To answer what are the most common ingredients by cuisine, the following histograms graphs were created. This allows us to step through all the cuisines and take notice of which ingredients appeared the most. I organized them by the UN Geoscheme for regions and when a cuisine was not a country, I grouped it with where the cuisine is typically associated with. The only cuisine I did not do this was Jewish cuisine since they cover multiple areas and are dispersed globally. We will use these groupings for visualization later.
-
-To get a look at the top 50 ingredients and all the cuisines at once, I created this heatmap. This allows us to identify which cuisines have similar proportion for each of the top 50 ingredients. The y-axis is grouped by region and the x-axis is ordered from most common to least common.
+ Now to figure out how ingredient usages breaks down by cuisine, I produced a heat map and added 25 more ingredients to make it a little more interesting.
+ I organized the cuisines on the y-axis by the UN Geoscheme for regions and when a cuisine was not a country, I grouped it with the region with which the cuisine is typically associated with.The only cuisine I did not do for was Jewish cuisine since their cuisine covers multiple areas and are dispersed globally. We will use these groupings for visualization with T-SNE later.
+ Some things that stood out to me were:
+ 
+1. High proportion of sugar, salt,flour and eggs in the Northern European countries - sounds like bakery recipes such as bread or cookies.
+2. Distinctive ingredients are popular in the countries you'd expect like tumeric in the South Asian countries and coconut milk in South-eastern countries
+3. Low proportion of garlic in Northern and some Western European countries
 
 ```{r heat, fig.align="center",echo=FALSE}
     knitr::include_graphics("results/plots/06_heatmap.png")
 ```
+
 ### Top 5 Ingredients by Cuisine
+For fun, I also created histograms of the top 5 ingredients in each country after removing the top 10 ingredients like salt and sugar. The top 5 ingredients made intuitive sense to me but I could also see that in the recipes included in this dataset are not representative of an entire cuisine, but rather more popular recipes.
+
 
 ```{r top5, fig.align="center",echo=FALSE}
     knitr::include_graphics("results/plots/05_americas.png")
@@ -176,24 +182,23 @@ To get a look at the top 50 ingredients and all the cuisines at once, I created 
     knitr::include_graphics("results/plots/05_europe.png")
 ```
 
-
-
 ## Data Science Analysis
-
+Below outlines the steps to take the recipes' ingredients and see if we can see any structure or clusters through t-SNE.
 ### Data Set Up
 - Created a binary matrix where each row represents a recipe and each column represents an ingredient
 - Marked presence of an ingredient with `1` and absence with `0`
 - Ensured each recipe–ingredient pair is unique
-- Converted the table into a matrix and standardized values for analysis
+- Converted the table into a matrix and scaled the matrix for analysis
 
 ### Principal Component Analysis (PCA)
-- Ran PCA to reduce the high-dimensional ingredient matrix into 50 components
+- Ran PCA using the function prcomp_irlba, since we had over 1,000 ingredients and sparse matrices, to reduce the high-dimensional ingredient matrix into 100 components (20% variance)
+- Note: at first, I ran the normal prcomp function and it took about 670 PCs to capture 80% variance (but prcomp_irlba would not finish running with that many PCs, given it is computationally expensive).
 - Calculated variance explained by each component
 - Produced a scree plot to visualize variance explained by principal components
-- Extracted PCA scores
 ```{r pca_s, fig.align="center",echo=FALSE}
         knitr::include_graphics("results/plots/07_scree.png")
 ```
+
 
 ### t-SNE Embedding
 - Applied t-SNE on the PCA results to map recipes into two dimensions
@@ -208,18 +213,20 @@ To get a look at the top 50 ingredients and all the cuisines at once, I created 
 ```{r, results='asis', message=FALSE, echo=FALSE}
 cat('<iframe src="results/plots/tsne_recipes.html" width="100%" height="600" frameborder="0"></iframe>')
 ```
-
-
-      
 # Discussion
+To see if we can visualize recipes with similar ingredient profiles, we used PCA to reduce dimensionality and applied t-SNE to visualize local neighborhoods. You can see that Asian recipes, particularly, Southern, Eastern, and South-east Asian, are located near each other. You can also see a couple of small North American and South American clusters. European recipes are spread out. One thing I did notice is that sweeter recipes were located by one another, additionally so were cocktail/drink recipes. I think the t-SNE might be showing us flavors or types of meals like desserts. If that is the case, it would explain why we see those Asian recipes together because there was more homogeneity in the type of recipes when I went through the names. Most of them were savory dinner recipes. The other cuisines, particular those in Europe, seem to have more of a balance with both savory and sweet dishes with less regionally-specific ingredients. 
+
 
 # Limitations
--   Overrepresents cuisines and recipes popular among North American and English‑speaking audiences, while underrepresenting others and not true traditional cuisine.
--   Smaller sample does not capture the full diversity of global cuisines.
--   Ingredients are stored as text strings, even after cleaning and normalization. Cleaning could be furthered.
--   Ambiguities remain (e.g., “chili” could mean chili pepper or chili powder).
+There are some limitations that I want to acknowledge. The cuisines dataset is a relatively small sample that does not capture global cuisine. Additionally, since allrecipes.com is a U.S. owned company, we are going to have more recipes that for North American and English‑speaking audiences. For example, recipes labeled "Chinese" for their cuisine may be American-ized versions and don't accurately represent traditional cuisine. Lastly, food often crosses borders and having one cuisine tagged to it ignores the impact of colonization, immigration, fusion and globalization.
+
 
 # Next Steps
--   Better way to standardize ingredients
--   K Means to identify clusters
--   Webscrape more recipes to get a better variety and representation of data
+If I were to continue this project, I'd like to do the following:
+
+-   Web scrape more recipes to get a better variety and representation of data and add meal as a variable
+-   Find a better way to standardize and tokenize ingredients
+-   Tag ingredients by dominant flavor (salty,sweet,bitter,umami, and sour)
+-   Repeat PCA and tSNE to see if there is clustering by meal,flavor,region
+-   Use a clustering method to identify clusters
+-   Create a Shiny app to find recipes by meal,flavor, and ingredients

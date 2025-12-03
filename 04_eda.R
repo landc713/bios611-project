@@ -94,7 +94,6 @@ plot_year <- ggplot(recipes_by_year, aes(x = year, y = n)) +
                       plot.title = element_text(face = "bold"),
                       plot.subtitle = element_text(margin = margin(b = 10)))+
                 geom_text(aes(label = n), vjust = -0.5, size = 3)
-plot_year
 ggsave(filename="results/plots/01_eda_recipes_by_year.png",plot=plot_year,width=6, height=4,dpi=300)
 ########################################################################################
 # Nutritional Value
@@ -131,7 +130,7 @@ nutrients <- ggplot(nutrients_long, aes(x = value)) +
     y = "Number of Recipes"
   ) +
   theme_allrecipes(base_size=8)
-nutrients
+
 ggsave(filename="results/plots/02_eda_nutrients.png",plot=nutrients,width=6, height=4,dpi=300)
 
 ########################################################################################
@@ -157,8 +156,6 @@ cuisine_histo <- ggplot(region_hist,
                      expand = expansion(mult = c(0, 0.1))) +
   guides(fill = guide_legend(order = 1)) + theme_allrecipes(base_size=8)
 
-cuisine_histo 
-
 ggsave(filename="results/plots/03_eda_cuisines.png",plot=cuisine_histo,width=8, height=5,dpi=300)
 
 ########################################################################################
@@ -179,11 +176,11 @@ top25 <- ggplot(ingredient_counts, aes(x = reorder(food, prop), y = prop)) +
   geom_text(aes(label = recipe_count), hjust = -0.2,size = 3) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   coord_flip() +
-  labs(title = "Most Common 25 Ingredients",
+  labs(title = "25 Most Common Ingredients",
        x = "Ingredient",
        y = "Proportion of Recipes") +
   theme_allrecipes(base_size=8)
-top25
+
 
 ggsave(filename="results/plots/04_eda_top25.png",plot=top25,width=10, height=6,dpi=300)
 

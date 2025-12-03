@@ -321,7 +321,7 @@ df_food$doc_id <- df_food$row
 anno <- udpipe_annotate(udmodel, x = df_food$food,doc_id = df_food$doc_id)
 anno <- as.data.frame(anno)
 
-anno_no_adj <- anno %>% filter(!(upos == "ADJ" & lemma != "garlic"))
+anno_no_adj <- anno %>% filter(!(upos == "ADJ" & lemma != "garlic") & !(upos == "ADJ" & lemma != "soy"))
 food_no_adj <- anno_no_adj %>%
                     group_by(doc_id, sentence_id) %>%
                     summarise(food = str_c(token, collapse = " "), .groups = "drop")
